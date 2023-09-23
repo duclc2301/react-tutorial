@@ -3,7 +3,7 @@ import Box from '@mui/material/Box';
 import Checkbox from '@mui/material/Checkbox';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import { ChangeEvent, MouseEvent } from 'react';
+import { ChangeEvent, MouseEvent, memo } from 'react';
 import { Todo } from 'types/todo';
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
   onDeleteTodo: (todoId: string) => void;
 }
 const TodoList = (props: Props) => {
+  console.log('TodoList re-render');
   const { todos, onCompleteTodo, onDeleteTodo } = props;
 
   const handleChange =
@@ -66,4 +67,4 @@ const TodoList = (props: Props) => {
   );
 };
 
-export default TodoList;
+export default memo(TodoList);

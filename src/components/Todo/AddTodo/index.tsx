@@ -62,7 +62,6 @@ const AddTodo = (props: Props) => {
       <TextField
         placeholder="Add new todo"
         sx={{ flexGrow: 1 }}
-        autoFocus
         value={value}
         onChange={handleChange}
       />
