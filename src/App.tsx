@@ -16,3 +16,9 @@ function App() {
 }
 
 export default App;
+
+// Ajax xhr http request, callback, callback hell, race, sequence, parallel
+// Promise
+// Async await
+
+// Event loop (stack (LIFO), callback queue (FIFO))

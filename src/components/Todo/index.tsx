@@ -1,14 +1,15 @@
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import { nanoid } from '@reduxjs/toolkit';
+import DeleteTodo from 'components/DeleteTodo';
 import { useCallback, useMemo, useState } from 'react';
-import { Todo } from 'types/todo';
+import { Todo, TodoFilter } from 'types/todo';
+import { sleep } from 'utils/misc';
 import AddTodo from './AddTodo';
+import Filters from './Filter';
 import Search from './Search';
 import Title from './Title';
 import TodoList from './TodoList';
-import FlashOnIcon from '@mui/icons-material/FlashOn';
 
 const TODOS: Todo[] = [
   {
@@ -34,15 +35,16 @@ const TODOS: Todo[] = [
 const Index = () => {
   const [todos, setTodos] = useState<Todo[]>(() => TODOS);
   const [searchText, setSearchText] = useState<string>('');
+  const [filter, setFilter] = useState<TodoFilter>('all');
+  const [todo, setTodo] = useState<Todo | null>(null);
+  const [open, setOpen] = useState<boolean>(false);
 
-  // Fake re-render
-  const [count, setCount] = useState<number>(0);
-
-  // Lifting State Up
+  // Add todo
   const handleAddTodo = (todo: Todo) => {
     setTodos((prevState) => [...prevState, todo]);
   };
 
+  // Change todo status
   const handleToggleCompleteTodo = useCallback(
     (todoId: string) => {
       const newTodos = todos.map((todo) => {
@@ -57,30 +59,71 @@ const Index = () => {
     [todos]
   );
 
-  const handleDeleteTodo = useCallback(
-    (todoId: string) => {
-      const newTodos = todos.filter((todo) => todo.id !== todoId);
-      setTodos(newTodos);
-    },
-    [todos]
-  );
+  // Delete todo
+  const handleOpenDeleteTodo = useCallback((todo: Todo) => {
+    setTodo(todo);
+    setOpen(true);
+  }, []);
+
+  const handleCloseDeleteTodo = async () => {
+    setOpen(false);
+    await sleep(350); // Khoảng thời gian transition unmount của modal
+    setTodo(null);
+  };
+
+  const handleDeleteTodo = async () => {
+    if (!todo) return;
+
+    await sleep(1000);
+
+    const newTodos = todos.map((item) => {
+      if (item.id === todo.id) {
+        // Soft delete
+        return { ...item, isDelete: true };
+      }
+      return item;
+    });
+    setTodos(newTodos);
+  };
 
   const handleSearchTodo = (value: string) => {
     setSearchText(value);
   };
 
-  const filteredTodos = useMemo(
-    () =>
-      todos.filter((todo) =>
-        todo.title.toLowerCase().includes(searchText.toLowerCase())
-      ),
-    [todos, searchText]
-  );
+  const filteredTodos = useMemo(() => {
+    const newTodos = todos.filter((todo) =>
+      todo.title.toLowerCase().includes(searchText.toLowerCase())
+    );
 
-  console.log('App render');
+    // if (filter === 'completed') {
+    //   return newTodos.filter((todo) => todo.isCompleted);
+    // } else if (filter === 'uncompleted') {
+    //   return newTodos.filter((todo) => !todo.isCompleted);
+    // } else if (filter === 'deleted') {
+    //   return newTodos.filter((todo) => todo.isDelete);
+    // } else {
+    //   return newTodos;
+    // }
 
-  const handleSetCount = () => {
-    setCount((prevState) => prevState + 1);
+    // Khi mà kiểm tra cùng một điều kiện, thì nên dùng switch cho rõ ràng
+    switch (filter) {
+      case 'completed': {
+        return newTodos.filter((todo) => todo.isCompleted);
+      }
+      case 'uncompleted': {
+        return newTodos.filter((todo) => !todo.isCompleted);
+      }
+      case 'deleted': {
+        return newTodos.filter((todo) => todo.isDelete); // = todo.isDelete === true
+      }
+      default: {
+        return newTodos.filter((todo) => !todo.isDelete);
+      }
+    }
+  }, [todos, filter, searchText]);
+
+  const handleFilterTodo = (filter: TodoFilter) => {
+    setFilter(filter);
   };
 
   return (
@@ -92,51 +135,42 @@ const Index = () => {
 
         <AddTodo onAddTodo={handleAddTodo} />
 
+        <Filters filter={filter} onFilter={handleFilterTodo} />
+
         <TodoList
           todos={filteredTodos}
           onCompleteTodo={handleToggleCompleteTodo}
-          onDeleteTodo={handleDeleteTodo}
+          onDeleteTodo={handleOpenDeleteTodo}
         />
-
-        <Button
-          onClick={handleSetCount}
-          startIcon={<FlashOnIcon />}
-          color="error"
-        >
-          Re-render
-        </Button>
       </Container>
+
+      <DeleteTodo
+        open={open}
+        todo={todo}
+        onClose={handleCloseDeleteTodo}
+        onDelete={handleDeleteTodo}
+      />
     </Box>
   );
 };
 
 export default Index;
 
-// Phân tích
+// Câu lệnh điều kiện trong JavaScript, sẽ tự động convert statement (biểu thức) sang kiểu boolean; ngoài ra còn có filter, every, some (tức là những phương thức có điều kiện)
+// Truthy: true, vd: 1, '1', {}, [], ...
+// Falsy: false, vd: 0, '', null, undefined, NaN, ...
 
-/*
-Đầu tiên thì khi component cha re-render thì component con cũng re-render theo (mặc định).
+// newTodos.filter((todo) => todo.isDelete)
+// newTodos.filter((todo) => todo.isDelete === true)
 
-Nhưng sẽ có trường hợp mình cần tối ưu component con, tức là khi nó bị re-render bởi một tác nhân (state khác,...) khác mà nó không liên quan tới, cụ thể ở đây là component cha re-render nhưng props của bản thân component con đó không thay đổi.
+// newTodos.filter((todo) => !todo.isDelete)
+// newTodos.filter((todo) => todo.isDelete === false)
 
-Ví dụ như component TodoList, nó phụ thuộc vào 3 giá trị: todos, onCompleteTodo và onDeleteTodo, thì đúng ra thì nó chỉ nên re-render lại khi 1 trong 3 giá trị này thay đổi, còn nếu không thì nó không cần re-render lại (đây là điều mong muốn).
+if ([1, 2, 3]) {
+}
 
-Bởi vì sau này có thể có hàng trăm mục Todo, nên việc re-render lại toàn bộ TodoList khi một Todo thay đổi là không cần thiết và không tối ưu.
+// Bản chất, hình dung như là if(Boolean(3)) {}
 
-
-Biện pháp xử lý:
-1. Sử dụng useMemo để ghi nhớ tính toán, giá trị của filteredTodos chỉ thay đổi khi và chỉ khi todos và searchText thay đổi.
- - todos thay đổi khi mình thêm một mục todo, khi đánh dấu đã hoàn thành, khi xóa,...
- - searchText thay đổi khi mình nhập vào ô search.
- Ngoài hai điều kiện này ra thì filteredTodos sẽ không bị tính toán lại.
-2. Sử dụng useCallback để ghi nhớ hàm, giá trị của handleToggleCompleteTodo và handleDeleteTodo chỉ thay đổi khi và chỉ khi todos thay đổi.
-
-Vậy thì useMemo và useCallback có gì khác nhau?
-- useMemo: ghi nhớ một giá trị được tính toán, một biểu thức phức tạp sẽ chỉ tính toán lại khi và chỉ khi các giá trị phụ thuộc thay đổi. Cụ thể ở đây là danh sách Todo, nó chỉ tính toán lại khi todos và searchText thay đổi.
-- useCallback: ghi nhớ một hàm, giá trị của hàm chỉ thay đổi khi và chỉ khi các giá trị phụ thuộc thay đổi. Cụ thể ở đây là danh sách Todo, nó chỉ tính toán lại khi todos thay đổi.
-=> khi cần ghi nhớ giá trị thì sử dụng useMemo, khi cần ghi nhớ một hàm callback, thì sử dụng useCallback.
-
-3. Sử dụng memo để tối ưu component TodoList, nó chỉ re-render lại khi và chỉ khi props của nó thay đổi.
-
-Mặc dù đã tối ưu các giá trị bên trong props của TodoList là todos, onCompleteTodo và onDeleteTodo, nhưng bản thân props cũng là một đối tượng, nên nó vẫn bị thay đổi khi component cha re-render, do đó, chúng ta sử dụng memo để kiểm tra từng giá trị có trong props, nếu có giá trị nào thay đổi, thì component TodoList mới re-render lại, còn không thì không.
-*/
+// Có hai cách để conver một giá trị sang boolean
+// 1. Boolean(value)
+// 2. !!value (!! gọi là double bang operator)

@@ -4,3 +4,5 @@ export interface Todo {
   isDelete: boolean;
   isCompleted: boolean;
 }
+
+export type TodoFilter = 'all' | 'completed' | 'uncompleted' | 'deleted'; // Union

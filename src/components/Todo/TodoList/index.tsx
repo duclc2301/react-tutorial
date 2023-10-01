@@ -9,10 +9,9 @@ import { Todo } from 'types/todo';
 interface Props {
   todos: Todo[];
   onCompleteTodo: (todoId: string) => void;
-  onDeleteTodo: (todoId: string) => void;
+  onDeleteTodo: (todo: Todo) => void;
 }
 const TodoList = (props: Props) => {
-  console.log('TodoList re-render');
   const { todos, onCompleteTodo, onDeleteTodo } = props;
 
   const handleChange =
@@ -21,8 +20,8 @@ const TodoList = (props: Props) => {
     };
 
   const handleDeleteTodo =
-    (todoId: string) => (_event: MouseEvent<HTMLButtonElement>) => {
-      onDeleteTodo(todoId);
+    (todo: Todo) => (_event: MouseEvent<HTMLButtonElement>) => {
+      onDeleteTodo(todo);
     };
 
   return (
@@ -56,7 +55,7 @@ const TodoList = (props: Props) => {
               }}
             >
               <Checkbox checked={isCompleted} onChange={handleChange(id)} />
-              <IconButton size="small" onClick={handleDeleteTodo(id)}>
+              <IconButton size="small" onClick={handleDeleteTodo(todo)}>
                 <DeleteIcon />
               </IconButton>
             </Box>
