@@ -155,22 +155,3 @@ const Index = () => {
 };
 
 export default Index;
-
-// Câu lệnh điều kiện trong JavaScript, sẽ tự động convert statement (biểu thức) sang kiểu boolean; ngoài ra còn có filter, every, some (tức là những phương thức có điều kiện)
-// Truthy: true, vd: 1, '1', {}, [], ...
-// Falsy: false, vd: 0, '', null, undefined, NaN, ...
-
-// newTodos.filter((todo) => todo.isDelete)
-// newTodos.filter((todo) => todo.isDelete === true)
-
-// newTodos.filter((todo) => !todo.isDelete)
-// newTodos.filter((todo) => todo.isDelete === false)
-
-if ([1, 2, 3]) {
-}
-
-// Bản chất, hình dung như là if(Boolean(3)) {}
-
-// Có hai cách để conver một giá trị sang boolean
-// 1. Boolean(value)
-// 2. !!value (!! gọi là double bang operator)
