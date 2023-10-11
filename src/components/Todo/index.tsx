@@ -86,6 +86,17 @@ const Index = () => {
     setTodos(newTodos);
   };
 
+  // Undo todo
+  const handleUndoTodo = (todo: Todo) => {
+    const newTodos = todos.map((item) => {
+      if (item.id === todo.id) {
+        return { ...item, isDelete: false };
+      }
+      return item;
+    });
+    setTodos(newTodos);
+  };
+
   const handleSearchTodo = (value: string) => {
     setSearchText(value);
   };
@@ -141,6 +152,7 @@ const Index = () => {
           todos={filteredTodos}
           onCompleteTodo={handleToggleCompleteTodo}
           onDeleteTodo={handleOpenDeleteTodo}
+          onUndoTodo={handleUndoTodo}
         />
       </Container>
 
