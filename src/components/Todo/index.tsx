@@ -10,6 +10,7 @@ import Filters from './Filter';
 import Search from './Search';
 import Title from './Title';
 import TodoList from './TodoList';
+import useNotification from 'hooks/useNotification';
 
 const TODOS: Todo[] = [
   {
@@ -38,6 +39,7 @@ const Index = () => {
   const [filter, setFilter] = useState<TodoFilter>('all');
   const [todo, setTodo] = useState<Todo | null>(null);
   const [open, setOpen] = useState<boolean>(false);
+  const setNotification = useNotification();
 
   // Add todo
   const handleAddTodo = (todo: Todo) => {
@@ -84,6 +86,11 @@ const Index = () => {
       return item;
     });
     setTodos(newTodos);
+
+    setNotification({
+      content: 'Todo was deleted successfully!',
+      severity: 'info',
+    });
   };
 
   // Undo todo
